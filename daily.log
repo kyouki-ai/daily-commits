@@ -4,3 +4,19 @@
 2026-11-16 01:05:45  committed pending changes
 2026-11-16 01:05:45  commit for 2026-11-16 already exists
 2026-11-16 01:05:48  ERROR: To https://github.com/kyouki-ai/daily-commits.git
+2026-11-16 01:06:27  committed pending changes
+2026-11-16 01:06:27  commit for 2026-11-16 already exists
+2026-11-16 01:06:27  push failed, retrying after rebase: git : fatal: unable to access 'https://github.com/kyouki-ai/daily-commits.git/': schannel: AcquireCredentialsHandle 
+failed: SEC_E_NO_CREDENTIALS (0x8009030e) - No credentials are available in the security package
+At C:\Users\nikit\OneDrive\Документы\deepseek-harness\default-workspace\daily-commits\daily.ps1:41 char:12
++ $pushOut = git push origin main 2>&1 | Out-String
++            ~~~~~~~~~~~~~~~~~~~~~~~~~
+    + CategoryInfo          : NotSpecified: (fatal: unable t...ecurity package:String) [], RemoteException
+    + FullyQualifiedErrorId : NativeCommandError
+2026-11-16 01:06:28  push failed: git : fatal: unable to access 'https://github.com/kyouki-ai/daily-commits.git/': schannel: AcquireCredentialsHandle 
+failed: SEC_E_NO_CREDENTIALS (0x8009030e) - No credentials are available in the security package
+At C:\Users\nikit\OneDrive\Документы\deepseek-harness\default-workspace\daily-commits\daily.ps1:45 char:16
++     $pushOut = git push origin main 2>&1 | Out-String
++                ~~~~~~~~~~~~~~~~~~~~~~~~~
+    + CategoryInfo          : NotSpecified: (fatal: unable t...ecurity package:String) [], RemoteException
+    + FullyQualifiedErrorId : NativeCommandError
