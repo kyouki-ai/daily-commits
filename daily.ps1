@@ -1,4 +1,6 @@
-# daily.ps1 — ежедневный коммит. Запускается Планировщиком задач Windows.
+﻿# daily.ps1 - makes at least one commit per day and pushes it.
+# Runs from Windows Task Scheduler. Keep this file ASCII-only.
+
 $ErrorActionPreference = 'Stop'
 $repo = $PSScriptRoot
 Set-Location $repo
@@ -15,27 +17,29 @@ try {
     $dirty = git status --porcelain
     if ($dirty) {
         git add -A
-        git commit -m "auto: изменения за $today" | Out-Null
-        Say "закоммичены изменения за $today"
+        git commit -m "auto: changes $today" | Out-Null
+        Say "committed pending changes"
     }
 
-    $last = git log -1 --format="%cd" --date=short
+    $last = git log -1 --format='%cd' --date=short
     if ($last -ne $today) {
         $n = [int](git rev-list --count HEAD) + 1
-        if (-not (Test-Path $journal)) { "# Дневник`n`n" | Out-File $journal -Encoding utf8 }
-        Add-Content -Path $journal -Value "- $today — день $n." -Encoding utf8
+        if (-not (Test-Path $journal)) {
+            Set-Content -Path $journal -Value '# Journal', '' -Encoding utf8
+        }
+        Add-Content -Path $journal -Value ('- {0} - day {1}' -f $today, $n) -Encoding utf8
         git add -A
         git commit -m "daily: $today" | Out-Null
-        Say "ежедневный коммит за $today"
+        Say "daily commit made"
     }
     else {
-        Say "коммит за $today уже есть"
+        Say "commit for $today already exists"
     }
 
     git push origin main 2>&1 | Out-Null
     Say 'push ok'
 }
 catch {
-    Say "ERROR: $_"
+    Say ('ERROR: ' + $_)
     exit 1
 }
