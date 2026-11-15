@@ -1,7 +1,7 @@
 ﻿# daily.ps1 - makes at least one commit per day and pushes it.
 # Runs from Windows Task Scheduler. Keep this file ASCII-only.
 
-$ErrorActionPreference = 'Stop'
+$ErrorActionPreference = 'Continue'
 $repo = $PSScriptRoot
 Set-Location $repo
 $today = Get-Date -Format 'yyyy-MM-dd'
@@ -13,33 +13,39 @@ function Say($m) {
     Add-Content -Path $log -Value $line -Encoding utf8
 }
 
-try {
-    $dirty = git status --porcelain
-    if ($dirty) {
-        git add -A
-        git commit -m "auto: changes $today" | Out-Null
-        Say "committed pending changes"
-    }
-
-    $last = git log -1 --format='%cd' --date=short
-    if ($last -ne $today) {
-        $n = [int](git rev-list --count HEAD) + 1
-        if (-not (Test-Path $journal)) {
-            Set-Content -Path $journal -Value '# Journal', '' -Encoding utf8
-        }
-        Add-Content -Path $journal -Value ('- {0} - day {1}' -f $today, $n) -Encoding utf8
-        git add -A
-        git commit -m "daily: $today" | Out-Null
-        Say "daily commit made"
-    }
-    else {
-        Say "commit for $today already exists"
-    }
-
-    git push origin main 2>&1 | Out-Null
-    Say 'push ok'
+# 1. commit anything still uncommitted
+$dirty = git status --porcelain
+if ($dirty) {
+    git add -A 2>$null
+    git commit -m "auto: changes $today" 2>$null | Out-Null
+    Say 'committed pending changes'
 }
-catch {
-    Say ('ERROR: ' + $_)
-    exit 1
+
+# 2. guarantee a commit dated today
+$last = git log -1 --format='%cd' --date=short
+if ($last -ne $today) {
+    $n = [int](git rev-list --count HEAD) + 1
+    if (-not (Test-Path $journal)) {
+        Set-Content -Path $journal -Value '# Journal', '' -Encoding utf8
+    }
+    Add-Content -Path $journal -Value ('- {0} - day {1}' -f $today, $n) -Encoding utf8
+    git add -A 2>$null
+    git commit -m "daily: $today" 2>$null | Out-Null
+    Say 'daily commit made'
 }
+else {
+    Say "commit for $today already exists"
+}
+
+# 3. push (git writes progress to stderr, so judge by exit code only)
+$pushOut = git push origin main 2>&1 | Out-String
+if ($LASTEXITCODE -ne 0) {
+    Say ('push failed, retrying after rebase: ' + $pushOut.Trim())
+    git pull --rebase --autostash origin main 2>&1 | Out-Null
+    $pushOut = git push origin main 2>&1 | Out-String
+    if ($LASTEXITCODE -ne 0) {
+        Say ('push failed: ' + $pushOut.Trim())
+        exit 1
+    }
+}
+Say 'push ok'
